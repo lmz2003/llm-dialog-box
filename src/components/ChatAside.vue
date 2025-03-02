@@ -69,13 +69,6 @@
 
 <script>
 import { ref, inject, watch, onMounted, nextTick } from "vue";
-import {
-  Plus,
-  ChatRound,
-  MoreFilled,
-  Edit,
-  Delete,
-} from "@element-plus/icons-vue";
 import { queryMsgList } from "../api/message.js";
 import { useChatStore } from "../stores/chat.js";
 import { marked } from "marked";
@@ -119,7 +112,9 @@ export default {
 
     const createNewChat = () => {
       isNewConversation.value = true;
+      activeChat.value = "";
       store.$reset();
+
     };
     // 格式化文件大小
     const formatFileSize = (bytes) => {

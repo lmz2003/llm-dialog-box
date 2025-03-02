@@ -35,7 +35,6 @@ export default {
     const chatHelper = new ChatHelper(store);
     let isNewConversation = ref(true);
     const newConversationId = ref(null);
-    const userInput = ref("");
     let selectedChatId = ref("");
 
     const handleChatSelected = (chatId) => {
@@ -56,6 +55,7 @@ export default {
       try {
         const conversationId = await chatHelper.handleChatMessage(message, null, true, fileInfo);
         newConversationId.value = conversationId;
+        console.log("newConversationId", newConversationId.value);
       } catch (error) {
         console.error("创建新对话失败:", error);
       }

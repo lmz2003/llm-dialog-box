@@ -1,18 +1,18 @@
+
 <template>
-  <div class="inline-dialog" :class="{ 'is-expanded': isExpanded, 'is-chatting': isChatting }">
+  <div
+    class="inline-dialog"
+    :class="{ 'is-expanded': isExpanded, 'is-chatting': isChatting }"
+  >
     <!-- 收缩形态 -->
-    <div 
-      v-if="!isExpanded" 
+    <div
+      v-if="!isExpanded"
       class="inline-dialog-collapsed"
       @click="expandDialog"
     >
       <div class="search-input">
         <el-icon class="search-icon"><Search /></el-icon>
-        <input 
-          type="text"
-          placeholder="搜索或提问..."
-          readonly
-        />
+        <input type="text" placeholder="搜索或提问..." readonly />
         <kbd class="keyboard-shortcut">Ctrl+K</kbd>
       </div>
     </div>
@@ -22,30 +22,35 @@
       <div class="dialog-header">
         <div class="dialog-title" v-if="isChatting">对话中</div>
         <div class="dialog-title" v-else>搜索或提问</div>
-        <el-button 
-          class="close-btn" 
-          @click="closeDialog"
-          text
+        <el-button type="primary"
+        @click="createNewChat"
         >
+          <el-icon><Plus /></el-icon>新建对话
+        </el-button>
+        <el-button class="close-btn" @click="closeDialog" text>
           <el-icon><Close /></el-icon>
         </el-button>
       </div>
-      
+
       <div class="dialog-content">
         <div class="messages" ref="messagesContainer">
-          <div v-if="!isChatting && !messages.length" class="empty-state">
+          <div v-if="!isChatting && !store.messages.length" class="empty-state">
             <p>有什么可以帮助你的？</p>
           </div>
-          <div 
-            v-for="(message, index) in messages" 
+
+          <!-- 将每条消息包装在一个message-wrapper中，以更好地控制布局 -->
+          <div
+            v-for="(message, index) in store.messages"
             :key="index"
-            class="message"
+            class="message-wrapper"
             :class="message.type"
           >
-            <div class="message-content">{{ message.content }}</div>
+            <div class="message" :class="message.type">
+              <div class="message-content" v-html="message.content"></div>
+            </div>
           </div>
         </div>
-        
+
         <div class="input-area">
           <textarea
             v-model="userInput"
@@ -55,7 +60,7 @@
             @input="autoResize"
             ref="inputArea"
           ></textarea>
-          <el-button 
+          <el-button
             class="send-btn"
             type="primary"
             @click="sendMessage"
@@ -69,104 +74,108 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, nextTick } from 'vue'
-import { Search, Close, Position } from '@element-plus/icons-vue'
 
-const isExpanded = ref(false)
-const isChatting = ref(false)
-const userInput = ref('')
-const messages = ref([])
-const messagesContainer = ref(null)
-const inputArea = ref(null)
+<script setup>
+import { ref, onMounted, nextTick , watch} from "vue";
+import { ChatHelper } from "../utils/chatHelper";
+import { useInlineChatStore } from "../stores/inlineChat.js";
+
+const isExpanded = ref(false);
+const isChatting = ref(false);
+const userInput = ref("");
+const messagesContainer = ref(null);
+const inputArea = ref(null);
+const ConversationId = ref(null);
+const store = useInlineChatStore();
+const chatHelper = new ChatHelper(store);
+let isNewConversation = ref(true);
 
 // 展开对话框
 const expandDialog = () => {
-  isExpanded.value = true
+  isExpanded.value = true;
   nextTick(() => {
-    inputArea.value?.focus()
-  })
-}
+    inputArea.value?.focus();
+  });
+};
 
 // 关闭对话框
 const closeDialog = () => {
-  isExpanded.value = false
-  isChatting.value = false
-  userInput.value = ''
-  messages.value = []
-}
+  isExpanded.value = false;
+  isChatting.value = false;
+  userInput.value = "";
+};
 
 // 处理回车发送
 const handleEnter = (e) => {
   if (!e.shiftKey) {
-    sendMessage()
+    sendMessage();
   }
-}
-
+};
+// 创建新对话
+const createNewChat = async () => {
+  isNewConversation.value = true;
+  isChatting.value = false;
+  ConversationId.value = null;
+  store.$reset();
+  expandDialog();
+};
 // 发送消息
 const sendMessage = async () => {
-  if (!userInput.value.trim()) return
-  
-  // 进入对话形态
-  isChatting.value = true
-  
-  // 添加用户消息
-  messages.value.push({
-    type: 'user',
-    content: userInput.value
-  })
-  
-  // 清空输入框
-  userInput.value = ''
-  
-  // 添加AI响应
-  messages.value.push({
-    type: 'assistant',
-    content: ''
-  })
-  
-  try {
-    // TODO: 调用 AI 接口
-    // const response = await callAIAPI(messages.value)
-    // 更新最后一条消息的内容
-    // 模拟AI响应
-    setTimeout(() => {
-      messages.value[messages.value.length - 1].content = "这是一个模拟的AI响应，实际项目中需要替换为真实的AI接口调用结果。"
-    }, 1000)
-  } catch (error) {
-    console.error('AI 响应出错:', error)
-  }
-  
-  // 滚动到底部
-  nextTick(() => {
-    if (messagesContainer.value) {
-      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-    }
-  })
-}
+  if (!userInput.value.trim()) return;
 
+  try {
+    const userMsg = userInput.value;
+    // 清空输入框
+    userInput.value = "";
+    ConversationId.value = await chatHelper.handleChatMessage(
+      userMsg,
+      ConversationId.value,
+      isNewConversation.value,
+    );
+    isNewConversation.value = false;
+    console.log("conversationId", ConversationId.value);
+  } catch (error) {
+    console.error("处理消息失败:", error);
+  }
+
+  // 进入对话形态
+  isChatting.value = true;
+
+};
+// 监听 store.messages 的变化，并在变化后滚动到底部
+watch(
+  () => store.messages,
+  () => {
+    nextTick(() => {
+      if (messagesContainer.value) {
+        messagesContainer.value.scrollTop = 9999999;
+      }
+    });
+  },
+  { deep: true }
+);
 // 输入框自适应高度
 const autoResize = () => {
-  const textarea = inputArea.value
-  if (!textarea) return
-  
-  textarea.style.height = 'auto'
-  textarea.style.height = textarea.scrollHeight + 'px'
-}
+  const textarea = inputArea.value;
+  if (!textarea) return;
+
+  textarea.style.height = "auto";
+  textarea.style.height = textarea.scrollHeight + "px";
+};
 
 // 监听快捷键
 onMounted(() => {
-  window.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-      e.preventDefault()
+  window.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
       if (!isExpanded.value) {
-        expandDialog()
+        expandDialog();
       }
-    } else if (e.key === 'Escape' && isExpanded.value) {
-      closeDialog()
+    } else if (e.key === "Escape" && isExpanded.value) {
+      closeDialog();
     }
-  })
-})
+  });
+});
 </script>
 
 <style scoped>
@@ -264,11 +273,27 @@ onMounted(() => {
   color: #666666;
 }
 
-.message {
+/* 添加消息包装器来控制整体布局 */
+.message-wrapper {
+  display: flex;
+  width: 100%;
   margin-bottom: 16px;
+}
+
+/* 用户消息居右 */
+.message-wrapper.user {
+  justify-content: flex-end;
+}
+
+/* 助手消息居左 */
+.message-wrapper.assistant {
+  justify-content: flex-start;
+}
+
+.message {
+  max-width: 80%;
   padding: 12px;
   border-radius: 8px;
-  max-width: 80%;
   word-break: break-word;
 }
 
@@ -278,18 +303,18 @@ onMounted(() => {
   display: inline-block;
 }
 
+/* 用户消息样式 */
 .message.user {
-  background: #e8e8e8;
-  margin-left: auto;
-  margin-right: 0;
+  background: #e1f3ff; /* 更亮的蓝色背景 */
   color: #333333;
+  text-align: right; /* 文本右对齐 */
 }
 
+/* 助手消息样式 */
 .message.assistant {
   background: #f0f0f0;
-  margin-left: 0;
-  margin-right: auto;
   color: #333333;
+  text-align: left; /* 文本左对齐 */
 }
 
 .input-area {
@@ -316,7 +341,6 @@ textarea {
 
 .send-btn {
   padding: 8px;
-  /* background: var(--primary-color); */
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -335,4 +359,5 @@ textarea {
 .is-chatting .dialog-content {
   background-color: #f5f5f5;
 }
-</style> 
+</style>
+
