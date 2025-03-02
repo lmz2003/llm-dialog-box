@@ -1,6 +1,5 @@
 const token = 'pat_2qM0MTy1epYIyrIXGA9lfC6tx1eMJE1U4Q9DhX0aGv0NAbhwrhh85c2DScj1kKM7';
-const botId = '7474133536057212968'
-
+const botId = '7474133536057212968';
 
 // 修改 createChat 函数，用 fetch 替换原先的 request
 export function createChat(data, query) {
@@ -21,7 +20,6 @@ export function createChat(data, query) {
         ...data
     };
 
-    // 使用 fetch 进行请求
     return fetch(url, {
         method: 'POST',
         headers: {
@@ -31,12 +29,13 @@ export function createChat(data, query) {
         body: JSON.stringify(requestData)
     })
     .then(response => {
-        // if (!response.ok) {
-        //     throw new Error(`HTTP error: ${response.status}`);
-        // }
-
-        console.log("createChatResponse", response);
-        return response.json();
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response;
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        throw error;
     });
 }
-// ...existing code...

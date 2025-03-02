@@ -16,6 +16,8 @@
     "dotenv": "^16.4.7",
     "element-plus": "^2.9.5",
     "express": "^4.21.2",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.7",
     "pinia": "^3.0.1",
     "vue": "^3.5.13"
   },

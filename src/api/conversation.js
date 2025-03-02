@@ -1,5 +1,4 @@
 import request from '../utils/request';
-import dotenv from 'dotenv';
 
 // Import token using the environment variable
 const token = 'pat_2qM0MTy1epYIyrIXGA9lfC6tx1eMJE1U4Q9DhX0aGv0NAbhwrhh85c2DScj1kKM7';
