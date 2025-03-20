@@ -1,69 +1,100 @@
 <template>
-  <el-aside class="chat-aside">
-    <div class="chat-aside-header">
-      <h2>ChatRobot</h2>
-      <el-button
-        type="primary"
-        class="new-chat-btn"
-        block
-        @click="createNewChat"
-      >
-        <el-icon><Plus /></el-icon>新建对话
-      </el-button>
-    </div>
-    <div class="chat-aside-history">
-      <el-scrollbar>
-        <el-menu
-          class="chat-menu"
-          :default-active="activeChat"
-          @select="handleSelect"
-        >
-          <el-menu-item
-            v-for="chat in chatList"
-            :key="chat.id"
-            :index="String(chat.id)"
-            class="chat-menu-item"
-            @click="handleItemClick(chat.id)"
+  <el-aside class="chat-aside" :class="{ 'is-collapsed': isCollapsed }">
+    <!-- 展开状态下的完整侧边栏 -->
+    <template v-if="!isCollapsed">
+      <div class="chat-aside-headertop">
+        <h2>ChatRobot</h2>
+
+        <div class="collapse-button" @click="handleToggleCollapse">
+          <el-icon v-if="isCollapsed"><ArrowRight /></el-icon>
+          <el-icon v-else><ArrowLeft /></el-icon>
+        </div>
+      </div>
+
+      <div class="chat-aside-header">
+        <el-button type="primary" class="new-chat-btn" @click="createNewChat">
+          <el-icon><Plus /></el-icon>开启新对话
+        </el-button>
+      </div>
+      <div class="chat-aside-history">
+        <el-scrollbar>
+          <el-menu
+            class="chat-menu"
+            :default-active="activeChat"
+            @select="handleSelect"
           >
-            <el-icon><ChatRound /></el-icon>
-            <template v-if="chat.id === editingId">
-              <el-input
-                v-model="editingTitle"
-                size="small"
-                @keyup.enter="handleRenameConfirm(chat.id)"
-                @blur="handleRenameConfirm(chat.id)"
-                @click.stop
-                ref="inputRef"
-                class="edit-input"
-                v-focus
-              />
-            </template>
-            <span v-else class="chat-title">{{ chat.title }}</span>
-            <el-dropdown trigger="click" class="more-dropdown" @click.stop>
-              <el-button class="more-button" size="small" @click.stop>
-                <el-icon><MoreFilled /></el-icon>
-              </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item @click="handleRename(chat.id)">
-                    <el-icon><Edit /></el-icon>重命名
-                  </el-dropdown-item>
-                  <el-dropdown-item @click="handleDelete(chat.id)">
-                    <el-icon><Delete /></el-icon>删除
-                  </el-dropdown-item>
-                </el-dropdown-menu>
+            <el-menu-item
+              v-for="chat in chatList"
+              :key="chat.id"
+              :index="String(chat.id)"
+              class="chat-menu-item"
+              @click="handleItemClick(chat.id)"
+            >
+              <el-icon><ChatRound /></el-icon>
+              <template v-if="chat.id === editingId">
+                <el-input
+                  v-model="editingTitle"
+                  size="small"
+                  @keyup.enter="handleRenameConfirm(chat.id)"
+                  @blur="handleRenameConfirm(chat.id)"
+                  @click.stop
+                  ref="inputRef"
+                  class="edit-input"
+                  v-focus
+                />
               </template>
-            </el-dropdown>
-          </el-menu-item>
-        </el-menu>
-      </el-scrollbar>
-    </div>
-    <div class="chat-aside-foot">
+              <span v-else class="chat-title">{{ chat.title }}</span>
+              <el-dropdown trigger="click" class="more-dropdown" @click.stop>
+                <el-button class="more-button" size="small" @click.stop>
+                  <el-icon><MoreFilled /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="handleRename(chat.id)">
+                      <el-icon><Edit /></el-icon>重命名
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="handleDelete(chat.id)">
+                      <el-icon><Delete /></el-icon>删除
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </el-menu-item>
+          </el-menu>
+        </el-scrollbar>
+      </div>
+      <div class="chat-aside-foot">
+        <el-avatar
+          src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
+        />
+        <h3>欢迎使用</h3>
+      </div>
+    </template>
+
+    <!-- 收起状态下只显示图标按钮 -->
+    <template v-else>
       <el-avatar
         src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
       />
-      <h3>欢迎使用</h3>
-    </div>
+      <el-tooltip content="展开侧边栏" placement="right">
+        <div class="collapse-button" @click="handleToggleCollapse">
+          <el-icon v-if="isCollapsed"><ArrowRight /></el-icon>
+          <el-icon v-else><ArrowLeft /></el-icon>
+        </div>
+      </el-tooltip>
+      <div class="collapsed-icons">
+        <el-tooltip content="开始新对话" placement="right">
+          <el-button
+            type="primary"
+            class="icon-btn"
+            circle
+            @click="createNewChat"
+          >
+            <el-icon><Plus /></el-icon>
+          </el-button>
+        </el-tooltip>
+      </div>
+    </template>
   </el-aside>
 </template>
 
@@ -73,9 +104,22 @@ import { queryMsgList } from "../api/message.js";
 import { useChatStore } from "../stores/chat.js";
 import { marked } from "marked";
 import { ElMessage } from "element-plus";
+import {
+  Plus,
+  ArrowLeft,
+  ArrowRight,
+  ChatSquare,
+  Setting,
+} from "@element-plus/icons-vue";
 
 export default {
   name: "ChatAside",
+  props: {
+    isCollapsed: {
+      type: Boolean,
+      default: false,
+    },
+  },
   setup(props, { emit }) {
     const store = useChatStore();
     const chatList = ref([]);
@@ -86,13 +130,16 @@ export default {
     const editingTitle = ref("");
     const inputRef = ref(null);
 
+    // 处理收起/展开
+    const handleToggleCollapse = () => {
+      emit("toggleCollapse");
+    };
+
     // 从本地存储加载 chatList
     onMounted(() => {
       const savedChatList = localStorage.getItem("chatList");
       if (savedChatList) {
         chatList.value = JSON.parse(savedChatList);
-        // 确保列表是倒序的
-        // chatList.value.reverse();
       }
     });
 
@@ -107,15 +154,14 @@ export default {
 
     const handleSelect = (index) => {
       activeChat.value = index;
-      // isNewConversation.value = false;
     };
 
     const createNewChat = () => {
       isNewConversation.value = true;
       activeChat.value = "";
       store.$reset();
-
     };
+
     // 格式化文件大小
     const formatFileSize = (bytes) => {
       if (bytes === 0) return "0 B";
@@ -124,6 +170,7 @@ export default {
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
     };
+
     const handleItemClick = async (query) => {
       isNewConversation.value = false;
       const data = {
@@ -132,38 +179,37 @@ export default {
       console.log(query);
       try {
         const response = await queryMsgList(data, query);
-        console.log("根据会话id查询的消息列表", response.data); // 处理响应数据
+        console.log("根据会话id查询的消息列表", response.data);
 
-        // store.messages = response.data.data;
-
-        // 将 role 和 content 分别存入 store.messages
         store.messages = response.data.data.map((item) => {
           if (item.role === "assistant") {
             return {
               type: item.role,
               content: marked(item.content),
-            }
-          }
-          else{
-            if(item.content_type === 'text'){
+            };
+          } else {
+            if (item.content_type === "text") {
               return {
                 type: item.role,
                 content: item.content,
-              }
-            }else if(item.content_type === 'object_string'){
-              const content = JSON.parse(item.content)
-              console.log("🚀 ~ store.messages=response.data.data.map ~ content:", content)
-              const files = content.filter(item => item.type !== 'text')
-              console.log("🚀 ~ files ~ files:", files)
-              const file = files.map(item => {
+              };
+            } else if (item.content_type === "object_string") {
+              const content = JSON.parse(item.content);
+              console.log(
+                "🚀 ~ store.messages=response.data.data.map ~ content:",
+                content
+              );
+              const files = content.filter((item) => item.type !== "text");
+              console.log("🚀 ~ files ~ files:", files);
+              const file = files.map((item) => {
                 item.size = formatFileSize(item.size);
                 return item;
-              })
+              });
               return {
                 type: item.role,
                 content: content[0].text,
-                files: file
-              }
+                files: file,
+              };
             }
           }
         });
@@ -240,6 +286,12 @@ export default {
       editingTitle,
       inputRef,
       handleRenameConfirm,
+      handleToggleCollapse,
+      Plus,
+      ArrowLeft,
+      ArrowRight,
+      ChatSquare,
+      Setting,
     };
   },
   directives: {
@@ -256,20 +308,86 @@ export default {
   background-color: aliceblue;
   width: 15%;
   height: 100%;
+  position: relative;
+  transition: width 0.3s ease;
+  overflow: hidden;
 }
+
+.chat-aside.is-collapsed {
+  width: 64px;
+}
+
+/* 修改收缩按钮样式和位置 */
+.collapse-button {
+  /* position: absolute; */
+  right: 10px;
+  top: 10px;
+  width: 32px;
+  height: 32px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 20%;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s;
+  border: 1px solid #e5e7eb;
+}
+
+.collapse-button:hover {
+  background-color: #f3f4f6;
+  transform: scale(1.05);
+}
+
+.collapse-button .el-icon {
+  font-size: 18px;
+  color: #6b7280;
+}
+
+/* 收缩时的图标样式 */
+.collapsed-icons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 10px; /* 增加顶部间距，为收缩按钮留出空间 */
+  gap: 20px;
+}
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.icon-btn:hover {
+  transform: scale(1.05);
+}
+
+/* 展开时的侧边栏样式
 .chat-aside-header {
-  height: 10%;
-  padding: 16px;
-}
+  /* align-items: left;  
+} */
+
 .chat-aside-history {
   height: 75%;
   background-color: aliceblue;
 }
+
 .chat-aside-foot {
   height: 10%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
+
 .new-chat-btn {
-  margin: 0 16px 20px;
+  margin: 0 5px 20px;
 }
 
 .chat-menu {
@@ -277,6 +395,7 @@ export default {
   border-right: none;
   background-color: aliceblue;
 }
+
 .chat-menu-item {
   width: 95%;
   height: 45px;
@@ -284,11 +403,13 @@ export default {
   border-radius: 15px;
   position: relative;
 }
+
 .chat-menu-item:hover {
   width: 95%;
   background-color: #b0c4de;
   border-radius: 15px;
 }
+
 .chat-title {
   max-width: 80%;
   overflow: hidden;
@@ -321,5 +442,11 @@ export default {
 
 .edit-input :deep(.el-input__wrapper) {
   background-color: white;
+}
+
+.chat-aside-headertop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>

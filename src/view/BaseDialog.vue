@@ -1,7 +1,11 @@
 <template>
   <el-container class="common-layout">
-    <!-- 侧边栏组件 -->
-    <ChatAside @chatSelected="handleChatSelected" />
+    <!-- 侧边栏组件，传递isCollapsed属性 -->
+    <ChatAside 
+      @chatSelected="handleChatSelected" 
+      :isCollapsed="isAsideCollapsed" 
+      @toggleCollapse="toggleAside" 
+    />
 
     <!-- 使用整合后的 ChatMain 组件 -->
     <el-container direction="vertical">
@@ -36,6 +40,7 @@ export default {
     let isNewConversation = ref(true);
     const newConversationId = ref(null);
     let selectedChatId = ref("");
+    const isAsideCollapsed = ref(false); // 控制侧边栏收起状态
 
     const handleChatSelected = (chatId) => {
       console.log("Selected chat ID:", chatId);
@@ -61,6 +66,11 @@ export default {
       }
     };
 
+    // 切换侧边栏收起状态
+    const toggleAside = () => {
+      isAsideCollapsed.value = !isAsideCollapsed.value;
+    };
+
     provide("newConversationId", newConversationId);
     provide("isNewConversation", isNewConversation);
 
@@ -71,6 +81,8 @@ export default {
       store,
       Promotion,
       isNewConversation,
+      isAsideCollapsed,
+      toggleAside,
     };
   },
 };

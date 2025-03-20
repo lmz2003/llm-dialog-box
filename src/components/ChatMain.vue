@@ -315,11 +315,16 @@ export default {
 <style>
 /* 全局样式，确保代码块样式能够正确应用 */
 .code-block-container {
-  margin: 1rem 0;
-  border-radius: 8px;
+  margin: var(--code-block-margin, 1rem 0);
+  border-radius: var(--border-radius, 8px);
   overflow: hidden;
-  background-color: #211e1e;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background-color: var(--code-bg-color, #1e1e1e);
+  box-shadow: var(--code-shadow, 0 4px 12px rgba(0, 0, 0, 0.25));
+  transition: box-shadow 0.3s ease;
+}
+
+.code-block-container:hover {
+  box-shadow: var(--code-hover-shadow, 0 6px 16px rgba(0, 0, 0, 0.3));
 }
 .code-block-header {
   display: flex;
@@ -334,11 +339,19 @@ export default {
   font-weight: 500;
 }
 .copy-button {
-  background-color: transparent;
-  border: 1px solid #6e6e6e;
-  border-radius: 4px;
-  color: #e0e0e0;
-  padding: 4px 8px;
+  background-color: var(--button-bg, transparent);
+  border: 1px solid var(--button-border, #6e6e6e);
+  border-radius: var(--button-radius, 4px);
+  color: var(--button-text, #e0e0e0);
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.copy-button:hover {
+  background-color: var(--button-hover-bg, rgba(255, 255, 255, 0.1));
+  border-color: var(--button-hover-border, #909090);
+
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;

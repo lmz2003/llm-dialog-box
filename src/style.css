@@ -1,4 +1,31 @@
-html , body{
+:root {
+  --primary-color: #409EFF;
+  --card-bg: #ffffff;
+  --border-radius: 12px;
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --spacing-unit: 8px;
+}
+
+html, body {
   height: 100%;
   margin: 0;
+}
+
+.chat-aside {
+  background: var(--card-bg);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  padding: calc(var(--spacing-unit) * 2);
+}
+
+.chat-message {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  margin: calc(var(--spacing-unit) * 2) 0;
+  padding: calc(var(--spacing-unit) * 3);
+  transition: transform 0.2s ease;
+}
+
+.chat-message:hover {
+  transform: translateY(-2px);
 }
