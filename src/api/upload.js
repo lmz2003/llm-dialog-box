@@ -1,4 +1,4 @@
-const token = 'pat_2qM0MTy1epYIyrIXGA9lfC6tx1eMJE1U4Q9DhX0aGv0NAbhwrhh85c2DScj1kKM7';
+const token = 'pat_3Ziad7knVDa21JvNp19HdRM7MGHmhQUbExb5zIxBgeGNQTtKDPEd7lm5v91LUs9e';
 const botId = '7474133536057212968';
 
 /**
